@@ -1,0 +1,14 @@
+{
+    "root": true,
+    // https://github.com/hhru/eslint-config-hh
+    "extends": ["@hh.ru/eslint-config", "prettier", "prettier/standard"],
+    "plugins": ["prettier"],
+    "parser": "babel-eslint",
+    "parserOptions": {
+        "ecmaVersion": 6,
+        "sourceType": "module",
+        "ecmaFeatures": {
+            "modules": true
+        }
+    }
+}
