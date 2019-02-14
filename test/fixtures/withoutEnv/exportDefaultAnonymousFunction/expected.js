@@ -5,4 +5,4 @@ export default function _uid({ value }) {
     value
   );
 }
-_uid.displayName = "input";
+_uid.displayName = "withoutEnv/exportDefaultAnonymousFunction/input/noName";

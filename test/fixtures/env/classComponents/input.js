@@ -7,7 +7,7 @@ export class ClassComponentNamedExport extends React.Component {
     }
 }
 
-export default class  ClassComponentDefaultExport extends React.Component {
+export default class ClassComponentDefaultExport extends React.Component {
     render() {
         return <div />;
     }
