@@ -50,11 +50,6 @@ function transform({ types }) {
 
 function getComponentName(componentName='noName', state) {
     const extension = pathNode.extname(state.file.opts.filename);
-    
-    if (process.env.NODE_ENV === 'development') {
-        return componentName;
-    }
-    
     const name = pathNode.basename(state.file.opts.filename, extension);
     const lastTwoFoldersWithFileName = state.file.opts.filename.match(`([^/]+)\/([^/]+)\/${name}`);
     
