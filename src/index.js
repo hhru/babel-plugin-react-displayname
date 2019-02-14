@@ -1,54 +1,46 @@
 const pathNode = require('path');
 
 const classHasRenderMethod = require('./classHasRenderMethod');
-const bodyHasJSX = require('./bodyHasJSX');
 const setDisplayName = require('./setDisplayName');
 
 function transform({ types }) {
     return {
+        name: 'babel-plugin-transform-es2015-unicode-regex',
         visitor: {
-            ClassDeclaration: function(path) {
+            ClassDeclaration: function(path, state) {
                 if (classHasRenderMethod(path)) {
-                    setDisplayName(path, path.node.id, types);
+                    setDisplayName(
+                      path,
+                      path.node.id,
+                      types,
+                      getComponentName(path.node.id && path.node.id.name, state)
+                    );
                 }
             },
-            FunctionDeclaration: function(path, state) {
-                if (bodyHasJSX(path.node.body || (path.node.id && path.node.id.name), types)) {
-                    if (types.isExportDefaultDeclaration(path.parentPath.node)) {
-                        let displayName;
-
-                        if (path.node.id == null) {
-                            const extension = pathNode.extname(state.file.opts.filename);
-                            const name = pathNode.basename(state.file.opts.filename, extension);
-                            const id = path.scope.generateUidIdentifier('uid');
-
-                            path.node.id = id;
-                            displayName = name;
+            JSXElement: function(path, state) {
+                const { id, displayNamePath } = findCandidate(path);
+                
+                if (displayNamePath) {
+                    let generateId;
+                    let name = id && id.name;
+                    
+                    if (displayNamePath.container && types.isExportDefaultDeclaration(displayNamePath.container)) {
+                        if (displayNamePath.node.id == null) {
+                            generateId = displayNamePath.scope.generateUidIdentifier('uid');
+                            displayNamePath.node.id = generateId;
+                            name = 'noName';
                         }
-                        setDisplayName(path, path.node.id, types, displayName);
-                    } else if (
-                        types.isProgram(path.parentPath.node) ||
-                        types.isExportNamedDeclaration(path.parentPath.node)
-                    ) {
-                        setDisplayName(path, path.node.id, types);
                     }
-                }
-            },
-            FunctionExpression: function(path) {
-                if (shouldSetDisplayNameForFuncExpr(path, types)) {
-                    const id = findCandidateNameForExpression(path);
-
-                    if (id) {
-                        setDisplayName(path, id, types);
-                    }
-                }
-            },
-            ArrowFunctionExpression: function(path) {
-                if (shouldSetDisplayNameForFuncExpr(path, types)) {
-                    const id = findCandidateNameForExpression(path);
-
-                    if (id) {
-                        setDisplayName(path, id, types);
+                    
+                    
+                    
+                    if (name) {
+                        setDisplayName(
+                          displayNamePath,
+                          id || generateId,
+                          types,
+                          getComponentName(name, state)
+                        );
                     }
                 }
             },
@@ -56,53 +48,81 @@ function transform({ types }) {
     };
 }
 
-function shouldSetDisplayNameForFuncExpr(path, types) {
-    let id;
-
-    if (
-        types.isAssignmentExpression(path.parentPath.node) &&
-        !types.isMemberExpression(path.parentPath.node.left) &&
-        types.isExpressionStatement(path.parentPath.parentPath.node) &&
-        types.isProgram(path.parentPath.parentPath.parentPath.node)
-    ) {
-        id = path.parentPath.node.left;
-    } else if (
-        types.isVariableDeclarator(path.parentPath.node) &&
-        (types.isExportNamedDeclaration(path.parentPath.parentPath.parentPath.node) ||
-            types.isProgram(path.parentPath.parentPath.parentPath.node))
-    ) {
-        id = path.parentPath.node.id;
+function getComponentName(componentName='noName', state) {
+    const extension = pathNode.extname(state.file.opts.filename);
+    
+    if (process.env.NODE_ENV === 'development') {
+        return componentName;
     }
-
-    if (id) {
-        return bodyHasJSX(path.node.body, types);
-    }
-
-    return false;
+    
+    const name = pathNode.basename(state.file.opts.filename, extension);
+    const lastTwoFoldersWithFileName = state.file.opts.filename.match(`([^/]+)\/([^/]+)\/${name}`);
+    
+    return `${lastTwoFoldersWithFileName && lastTwoFoldersWithFileName[0]}/${componentName}`;
 }
 
-// https://github.com/babel/babel/blob/master/packages/babel-plugin-transform-react-display-name/src/index.js#L80
-// crawl up the ancestry looking for possible candidates for displayName inference
-function findCandidateNameForExpression(path) {
+function findCandidate(parentPath) {
     let id;
+    let displayNamePath;
     
-    path.find(function(path) {
-        if (path.isAssignmentExpression()) {
-            id = path.node.left;
-        } else if (path.isObjectProperty()) {
-            id = path.node.key;
-        } else if (path.isVariableDeclarator()) {
-            id = path.node.id;
-        } else if (path.isStatement()) {
-            // we've hit a statement, we should stop crawling up
-            return true;
+    const findExpression = (path) => {
+        let expressionId;
+        let expressionPath;
+        
+        expressionPath = path.findParent((path) => {
+            if (path.isCallExpression()) {
+                if (
+                  path.node &&
+                  path.node.arguments &&
+                  path.node.arguments[0] &&
+                  path.node.arguments[0].type === 'Identifier'
+                ) {
+                    expressionId = path.node.arguments[0].name;
+                }
+                return true;
+            }
+        });
+        
+        if (!expressionId) {
+            expressionPath = path.findParent(function(path) {
+                if (path.isAssignmentExpression()) {
+                    expressionId = path.node.left;
+                    return true;
+                } else if (path.isObjectProperty()) {
+                    expressionId = path.node.key;
+                    return true;
+                } else if (path.isVariableDeclarator()) {
+                    expressionId = path.node.id;
+                    return true;
+                }
+            });
         }
-
-        // we've got an id! no need to continue
-        if (id) return true;
+        
+        return { expressionId, expressionPath };
+    };
+    
+    parentPath.findParent(function(path) {
+        if (path.isFunctionExpression()) {
+            const { expressionId, expressionPath } = findExpression(path);
+            id = expressionId;
+            displayNamePath = expressionPath;
+            return !!id;
+        } else if (path.isArrowFunctionExpression()) {
+            const { expressionId, expressionPath } = findExpression(path);
+            id = expressionId;
+            displayNamePath = expressionPath;
+            return !!id;
+        } else if (path.isFunctionDeclaration()) {
+            id = path.node.id;
+            displayNamePath = path;
+            return !!id;
+        }
     });
     
-    return id;
+    return {
+        id,
+        displayNamePath,
+    };
 }
 
 module.exports = transform;

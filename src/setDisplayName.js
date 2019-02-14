@@ -1,17 +1,20 @@
+const displayNames = {};
+
 module.exports = function (path, nameNodeId, types, name) {
     const blockLevelStatement = path.find((path) => path.parentPath.isBlock());
     
-    if (!blockLevelStatement) {
+    if (!blockLevelStatement || !name || displayNames[name] ) {
         return
     }
-
+    
     const displayNameStatement = types.expressionStatement(
-        types.assignmentExpression(
-            '=',
-            types.memberExpression(nameNodeId, types.identifier('displayName')),
-            types.stringLiteral(name || nameNodeId.name)
-        )
+      types.assignmentExpression(
+        '=',
+        types.memberExpression(nameNodeId, types.identifier('displayName')),
+        types.stringLiteral(name)
+      )
     );
-
+    
+    displayNames[name] = true;
     blockLevelStatement.insertAfter(displayNameStatement);
 };

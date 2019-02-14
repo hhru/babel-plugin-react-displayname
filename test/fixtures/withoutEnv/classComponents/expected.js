@@ -7,27 +7,27 @@ export class ClassComponentNamedExport extends React.Component {
     }
 }
 
-ClassComponentNamedExport.displayName = 'ClassComponentNamedExport';
+ClassComponentNamedExport.displayName = 'withoutEnv/classComponents/input/ClassComponentNamedExport';
 export default class ClassComponentDefaultExport extends React.Component {
     render() {
         return React.createElement('div', null);
     }
 }
 
-ClassComponentDefaultExport.displayName = 'ClassComponentDefaultExport';
+ClassComponentDefaultExport.displayName = 'withoutEnv/classComponents/input/ClassComponentDefaultExport';
 export class ClassComponentNamedExportExtendedComponent extends Component {
     render() {
         return React.createElement('div', null);
     }
 }
 
-ClassComponentNamedExportExtendedComponent.displayName = 'ClassComponentNamedExportExtendedComponent';
+ClassComponentNamedExportExtendedComponent.displayName = 'withoutEnv/classComponents/input/ClassComponentNamedExportExtendedComponent';
 class ClassComponentWithStaticPropComponent extends Component {
     render() {
         return React.createElement('div', null);
     }
 }
-ClassComponentWithStaticPropComponent.displayName = 'ClassComponentWithStaticPropComponent';
+ClassComponentWithStaticPropComponent.displayName = 'withoutEnv/classComponents/input/ClassComponentWithStaticPropComponent';
 
 ClassComponentWithStaticPropComponent.get = () => {
     return React.createElement('div', null);
