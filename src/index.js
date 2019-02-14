@@ -83,10 +83,14 @@ function findCandidate(parentPath) {
                 if (path.isAssignmentExpression()) {
                     expressionId = path.node.left;
                     return true;
-                } else if (path.isObjectProperty()) {
+                }
+                
+                if (path.isObjectProperty()) {
                     expressionId = path.node.key;
                     return true;
-                } else if (path.isVariableDeclarator()) {
+                }
+                
+                if (path.isVariableDeclarator()) {
                     expressionId = path.node.id;
                     return true;
                 }
@@ -102,12 +106,16 @@ function findCandidate(parentPath) {
             id = expressionId;
             displayNamePath = expressionPath;
             return !!id;
-        } else if (path.isArrowFunctionExpression()) {
+        }
+        
+        if (path.isArrowFunctionExpression()) {
             const { expressionId, expressionPath } = findExpression(path);
             id = expressionId;
             displayNamePath = expressionPath;
             return !!id;
-        } else if (path.isFunctionDeclaration()) {
+        }
+        
+        if (path.isFunctionDeclaration()) {
             id = path.node.id;
             displayNamePath = path;
             return !!id;
