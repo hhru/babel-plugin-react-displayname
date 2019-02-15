@@ -1,12 +1,16 @@
 const pathNode = require('path');
 
 const classHasRenderMethod = require('./classHasRenderMethod');
-const setDisplayName = require('./setDisplayName');
+const { setDisplayName, resetCache } = require('./setDisplayName');
 
 function transform({ types }) {
     return {
         name: 'babel-plugin-transform-es2015-unicode-regex',
         visitor: {
+            // Root point
+            Program: function() {
+                resetCache();
+            },
             ClassDeclaration: function(path, state) {
                 if (classHasRenderMethod(path)) {
                     setDisplayName(
