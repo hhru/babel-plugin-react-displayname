@@ -23,7 +23,7 @@ describe('Transform add display name in react elements with env presets', functi
         const actual = transformFile(path.join(fixturesDirEnv, fixture, 'input.js'), true);
         const expected = fs.readFileSync(path.join(fixturesDirEnv, fixture, 'expected.js'), 'utf8');
 
-        it(path.basename(fixture), function() {
+        it(path.basename(fixture), function () {
             assert.equal(trim(actual), trim(expected));
         });
     });
