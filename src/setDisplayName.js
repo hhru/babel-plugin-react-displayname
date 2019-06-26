@@ -1,25 +1,59 @@
 let displayNames = {};
 
+const TRANSPILE_ANONYMOUS_FUNCTION_NAME_START_SUMBOL = '_';
+
 module.exports = {
-    resetCache: function() {
+    resetCache() {
         displayNames = {};
     },
-    setDisplayName: function(path, nameNodeId, types, name) {
+    setDisplayName(path, nameNodeId, types, name) {
+        let abortAppend;
+
+        if (Array.isArray(nameNodeId)) {
+            abortAppend = nameNodeId.some(
+                (node) => types.isThisExpression(node.object) || (node.object && node.object.name === '_this')
+            );
+        } else {
+            abortAppend =
+                TRANSPILE_ANONYMOUS_FUNCTION_NAME_START_SUMBOL !== nameNodeId.name.charAt(0) &&
+                nameNodeId.name.charAt(0) === nameNodeId.name.charAt(0).toLocaleLowerCase();
+        }
+    
+        if (abortAppend || !name || displayNames[name]) {
+            return;
+        }
+
         const blockLevelStatement = path.find((path) => path.parentPath.isBlock());
 
-        if (!blockLevelStatement || !name || displayNames[name]) {
+        if (!blockLevelStatement) {
             return;
+        }
+
+        let deepMemberExpression;
+
+        if (Array.isArray(nameNodeId)) {
+            for (let i = 0; i < nameNodeId.length; i += 2) {
+                deepMemberExpression = types.memberExpression(
+                    deepMemberExpression || nameNodeId[i],
+                    deepMemberExpression ? nameNodeId[i] : nameNodeId[i + 1]
+                );
+            }
+        } else {
+            deepMemberExpression = nameNodeId;
         }
 
         const displayNameStatement = types.expressionStatement(
             types.assignmentExpression(
                 '=',
-                types.memberExpression(nameNodeId, types.identifier('displayName')),
+                types.memberExpression(deepMemberExpression, types.identifier('displayName')),
                 types.stringLiteral(name)
             )
         );
 
         displayNames[name] = true;
-        blockLevelStatement.insertAfter(displayNameStatement);
+
+        if (!abortAppend) {
+            blockLevelStatement.insertAfter(displayNameStatement);
+        }
     },
 };

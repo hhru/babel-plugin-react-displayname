@@ -8,10 +8,10 @@ function transform({ types }) {
         name: 'babel-plugin-transform-es2015-unicode-regex',
         visitor: {
             // Root point
-            Program: function() {
+            Program() {
                 resetCache();
             },
-            ClassDeclaration: function(path, state) {
+            ClassDeclaration(path, state) {
                 if (classHasRenderMethod(path)) {
                     setDisplayName(
                         path,
@@ -21,12 +21,12 @@ function transform({ types }) {
                     );
                 }
             },
-            JSXElement: function(path, state) {
-                const { id, displayNamePath } = findCandidate(path);
-                
+            JSXElement(path, state) {
+                const { id, displayNamePath } = findCandidate(path, types);
+
                 if (displayNamePath) {
                     let generateId;
-                    let name = id && id.name;
+                    let name = Array.isArray(id) ? id : id && id.name;
 
                     if (displayNamePath.container && types.isExportDefaultDeclaration(displayNamePath.container)) {
                         if (displayNamePath.node.id == null) {
@@ -37,7 +37,7 @@ function transform({ types }) {
                     }
 
                     if (name) {
-                        setDisplayName(displayNamePath, id || generateId, types, getComponentName(name, state));
+                        setDisplayName(displayNamePath, id || generateId, types, getComponentName(name, state, types));
                     }
                 }
             },
@@ -45,15 +45,27 @@ function transform({ types }) {
     };
 }
 
-function getComponentName(componentName, state) {
+function getComponentName(componentName, state, types) {
     const extension = pathNode.extname(state.file.opts.filename);
     const name = pathNode.basename(state.file.opts.filename, extension);
     const lastTwoFoldersWithFileName = state.file.opts.filename.match(`([^/]+)\/([^/]+)\/${name}`);
 
-    return `${lastTwoFoldersWithFileName && lastTwoFoldersWithFileName[0]}/${componentName}`;
+    const proccessName = (node) => {
+        if (types.isMemberExpression(node)) {
+            return `${node.object.name}.${node.property.name}`;
+        }
+
+        return node.name;
+    };
+
+    const nameComponent = Array.isArray(componentName)
+        ? componentName.reverse().reduce((result, node) => `${result}${result ? '.' : ''}${proccessName(node)}`, '')
+        : componentName;
+    
+    return `${lastTwoFoldersWithFileName && lastTwoFoldersWithFileName[0]}/${nameComponent}`;
 }
 
-function findCandidate(parentPath) {
+function findCandidate(parentPath, types) {
     let id;
     let displayNamePath;
 
@@ -73,12 +85,11 @@ function findCandidate(parentPath) {
                     return true;
                 }
                 return false;
-                
             }
         });
 
         if (!expressionId) {
-            expressionPath = path.findParent(function(path) {
+            expressionPath = path.findParent((path) => {
                 if (path.isAssignmentExpression()) {
                     expressionId = path.node.left;
                     return true;
@@ -99,19 +110,40 @@ function findCandidate(parentPath) {
         return { expressionId, expressionPath };
     };
 
-    parentPath.findParent(function(path) {
-        if (path.isFunctionExpression()) {
+    function getMemberExpressionDeep(id, path, classPropertiesList = []) {
+        if (types.isObjectProperty(path)) {
+            if (classPropertiesList.length === 0) {
+                classPropertiesList.push(id);
+            }
             const { expressionId, expressionPath } = findExpression(path);
-            id = expressionId;
-            displayNamePath = expressionPath;
-            return !!id;
+            classPropertiesList.push(expressionId);
+            getMemberExpressionDeep(expressionId, expressionPath, classPropertiesList);
+        }
+
+        return classPropertiesList;
+    }
+
+    const getArrowId = (path) => {
+        const { expressionId, expressionPath } = findExpression(path);
+        const list = getMemberExpressionDeep(expressionId, expressionPath);
+
+        id = expressionId;
+
+        if (list.length > 0) {
+            id = list;
+        }
+
+        displayNamePath = expressionPath;
+        return !!id;
+    };
+
+    parentPath.findParent((path) => {
+        if (path.isFunctionExpression()) {
+            return getArrowId(path);
         }
 
         if (path.isArrowFunctionExpression()) {
-            const { expressionId, expressionPath } = findExpression(path);
-            id = expressionId;
-            displayNamePath = expressionPath;
-            return !!id;
+            return getArrowId(path);
         }
 
         if (path.isFunctionDeclaration()) {

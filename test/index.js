@@ -31,6 +31,9 @@ describe('Transform add display name in react elements with env presets', functi
 
 describe('Transform add display name in react elements without env presets', function() {
     fs.readdirSync(fixturesDirWithoutEnv).forEach(function(fixture) {
+        if (fixture !== 'variableDeclarationInComponent') {
+            return false;
+        }
         const actual = transformFile(path.join(fixturesDirWithoutEnv, fixture, 'input.js'));
         const expected = fs.readFileSync(path.join(fixturesDirWithoutEnv, fixture, 'expected.js'), 'utf8');
 
@@ -38,4 +41,5 @@ describe('Transform add display name in react elements without env presets', fun
             assert.equal(trim(actual), trim(expected));
         });
     });
+
 });
