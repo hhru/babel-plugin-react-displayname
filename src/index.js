@@ -110,27 +110,27 @@ function findCandidate(parentPath, types) {
         return { expressionId, expressionPath };
     };
 
-    function getMemberExpressionDeep(id, path, classPropertiesList = []) {
+    function getMemberExpressionNodes(id, path, classPropertiesList = []) {
         if (types.isObjectProperty(path)) {
             if (classPropertiesList.length === 0) {
                 classPropertiesList.push(id);
             }
             const { expressionId, expressionPath } = findExpression(path);
             classPropertiesList.push(expressionId);
-            getMemberExpressionDeep(expressionId, expressionPath, classPropertiesList);
+            getMemberExpressionNodes(expressionId, expressionPath, classPropertiesList);
         }
 
         return classPropertiesList;
     }
 
-    const getArrowId = (path) => {
+    const getFunctionExpressionId = (path) => {
         const { expressionId, expressionPath } = findExpression(path);
-        const list = getMemberExpressionDeep(expressionId, expressionPath);
+        const memberExpressionNodes = getMemberExpressionNodes(expressionId, expressionPath);
 
         id = expressionId;
 
-        if (list.length > 0) {
-            id = list;
+        if (memberExpressionNodes.length > 0) {
+            id = memberExpressionNodes;
         }
 
         displayNamePath = expressionPath;
@@ -139,11 +139,11 @@ function findCandidate(parentPath, types) {
 
     parentPath.findParent((path) => {
         if (path.isFunctionExpression()) {
-            return getArrowId(path);
+            return getFunctionExpressionId(path);
         }
 
         if (path.isArrowFunctionExpression()) {
-            return getArrowId(path);
+            return getFunctionExpressionId(path);
         }
 
         if (path.isFunctionDeclaration()) {

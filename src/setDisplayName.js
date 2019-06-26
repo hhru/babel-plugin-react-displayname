@@ -29,23 +29,23 @@ module.exports = {
             return;
         }
 
-        let deepMemberExpression;
+        let node;
 
         if (Array.isArray(nameNodeId)) {
             for (let i = 0; i < nameNodeId.length; i += 2) {
-                deepMemberExpression = types.memberExpression(
-                    deepMemberExpression || nameNodeId[i],
-                    deepMemberExpression ? nameNodeId[i] : nameNodeId[i + 1]
+                node = types.memberExpression(
+                    node || nameNodeId[i],
+                    node ? nameNodeId[i] : nameNodeId[i + 1]
                 );
             }
         } else {
-            deepMemberExpression = nameNodeId;
+            node = nameNodeId;
         }
 
         const displayNameStatement = types.expressionStatement(
             types.assignmentExpression(
                 '=',
-                types.memberExpression(deepMemberExpression, types.identifier('displayName')),
+                types.memberExpression(node, types.identifier('displayName')),
                 types.stringLiteral(name)
             )
         );
