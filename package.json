@@ -1,18 +1,21 @@
 {
     "name": "@hh.ru/babel-plugin-react-displayname",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "main": "lib/index.js",
     "devDependencies": {
+        "@hh.ru/eslint-config": "^5.0.2",
         "babel-cli": "^6.26.0",
+        "babel-eslint": "^10.0.2",
         "babel-plugin-transform-class-properties": "^6.24.1",
         "babel-preset-env": "^1.6.1",
         "babel-preset-react": "~6.24.1",
         "babel-preset-stage-0": "^6.16.0",
         "eslint": "~5.7.0",
-        "eslint-config-prettier": "~2.9.0",
-        "eslint-plugin-prettier": "~3.0.0",
+        "eslint-config-prettier": "^6.0.0",
+        "eslint-plugin-prettier": "^3.1.0",
         "eslint-plugin-react": "7.11.0",
-        "mocha": "5.2.0"
+        "mocha": "5.2.0",
+        "prettier": "^1.18.2"
     },
     "repository": {
         "type": "git",

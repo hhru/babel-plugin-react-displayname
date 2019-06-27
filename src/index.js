@@ -8,10 +8,10 @@ function transform({ types }) {
         name: 'babel-plugin-transform-es2015-unicode-regex',
         visitor: {
             // Root point
-            Program: function() {
+            Program() {
                 resetCache();
             },
-            ClassDeclaration: function(path, state) {
+            ClassDeclaration(path, state) {
                 if (classHasRenderMethod(path)) {
                     setDisplayName(
                         path,
@@ -21,24 +21,33 @@ function transform({ types }) {
                     );
                 }
             },
-            JSXElement: function(path, state) {
-                const { id, displayNamePath } = findCandidate(path);
-                
-                if (displayNamePath) {
-                    let generateId;
-                    let name = id && id.name;
+            JSXElement(path, state) {
+                const { id, displayNamePath } = findCandidate(path, types);
 
-                    if (displayNamePath.container && types.isExportDefaultDeclaration(displayNamePath.container)) {
-                        if (displayNamePath.node.id == null) {
-                            generateId = displayNamePath.scope.generateUidIdentifier('uid');
-                            displayNamePath.node.id = generateId;
-                            name = 'noName';
-                        }
-                    }
+                if (!displayNamePath) {
+                    return;
+                }
 
-                    if (name) {
-                        setDisplayName(displayNamePath, id || generateId, types, getComponentName(name, state));
-                    }
+                let generateId;
+                let name;
+
+                const proccessName = (node) =>
+                    types.isMemberExpression(node) ? `${node.object.name}.${node.property.name}` : node.name;
+
+                if (id) {
+                    name = Array.isArray(id)
+                        ? id.reduce((result, node) => `${result}${result ? '.' : ''}${proccessName(node)}`, '')
+                        : proccessName(id);
+                }
+
+                if (types.isExportDefaultDeclaration(displayNamePath.container) && displayNamePath.node.id == null) {
+                    generateId = displayNamePath.scope.generateUidIdentifier('uid');
+                    displayNamePath.node.id = generateId;
+                    name = 'noName';
+                }
+
+                if (name) {
+                    setDisplayName(displayNamePath, id || generateId, types, getComponentName(name, state));
                 }
             },
         },
@@ -53,7 +62,7 @@ function getComponentName(componentName, state) {
     return `${lastTwoFoldersWithFileName && lastTwoFoldersWithFileName[0]}/${componentName}`;
 }
 
-function findCandidate(parentPath) {
+function findCandidate(parentPath, types) {
     let id;
     let displayNamePath;
 
@@ -62,23 +71,22 @@ function findCandidate(parentPath) {
         let expressionPath;
 
         expressionPath = path.findParent((path) => {
-            if (path.isCallExpression()) {
-                if (
-                    path.node &&
-                    path.node.callee &&
-                    path.node.callee.name &&
-                    path.node.callee.name === '_createClass'
-                ) {
-                    expressionId = {};
-                    return true;
-                }
-                return false;
-                
+            if (
+                path.isCallExpression() &&
+                path.node &&
+                path.node.callee &&
+                path.node.callee.name &&
+                path.node.callee.name === '_createClass'
+            ) {
+                expressionId = {};
+                return true;
             }
+
+            return false;
         });
 
         if (!expressionId) {
-            expressionPath = path.findParent(function(path) {
+            expressionPath = path.findParent((path) => {
                 if (path.isAssignmentExpression()) {
                     expressionId = path.node.left;
                     return true;
@@ -93,25 +101,48 @@ function findCandidate(parentPath) {
                     expressionId = path.node.id;
                     return true;
                 }
+
+                return false;
             });
         }
 
         return { expressionId, expressionPath };
     };
 
-    parentPath.findParent(function(path) {
-        if (path.isFunctionExpression()) {
+    function getMemberExpressionNodes(id, path, classPropertiesList = []) {
+        if (types.isObjectProperty(path)) {
+            if (classPropertiesList.length === 0) {
+                classPropertiesList.push(id);
+            }
             const { expressionId, expressionPath } = findExpression(path);
-            id = expressionId;
-            displayNamePath = expressionPath;
-            return !!id;
+            classPropertiesList.push(expressionId);
+            getMemberExpressionNodes(expressionId, expressionPath, classPropertiesList);
+        }
+
+        return classPropertiesList;
+    }
+
+    const getFunctionExpressionId = (path) => {
+        const { expressionId, expressionPath } = findExpression(path);
+        const memberExpressionNodes = getMemberExpressionNodes(expressionId, expressionPath);
+
+        id = expressionId;
+
+        if (memberExpressionNodes.length > 0) {
+            id = memberExpressionNodes.reverse();
+        }
+
+        displayNamePath = expressionPath;
+        return !!id;
+    };
+
+    parentPath.findParent((path) => {
+        if (path.isFunctionExpression()) {
+            return getFunctionExpressionId(path);
         }
 
         if (path.isArrowFunctionExpression()) {
-            const { expressionId, expressionPath } = findExpression(path);
-            id = expressionId;
-            displayNamePath = expressionPath;
-            return !!id;
+            return getFunctionExpressionId(path);
         }
 
         if (path.isFunctionDeclaration()) {
@@ -119,6 +150,8 @@ function findCandidate(parentPath) {
             displayNamePath = path;
             return !!id;
         }
+
+        return false;
     });
 
     return {
