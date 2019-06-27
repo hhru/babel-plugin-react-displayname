@@ -32,3 +32,5 @@ ClassComponentWithStaticPropComponent.displayName = 'withoutEnv/classComponents/
 ClassComponentWithStaticPropComponent.get = () => {
     return React.createElement('div', null);
 };
+
+ClassComponentWithStaticPropComponent.get.displayName = 'withoutEnv/classComponents/input/ClassComponentWithStaticPropComponent.get';

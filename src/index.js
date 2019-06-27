@@ -24,45 +24,42 @@ function transform({ types }) {
             JSXElement(path, state) {
                 const { id, displayNamePath } = findCandidate(path, types);
 
-                if (displayNamePath) {
-                    let generateId;
-                    let name = Array.isArray(id) ? id : id && id.name;
+                if (!displayNamePath) {
+                    return;
+                }
 
-                    if (displayNamePath.container && types.isExportDefaultDeclaration(displayNamePath.container)) {
-                        if (displayNamePath.node.id == null) {
-                            generateId = displayNamePath.scope.generateUidIdentifier('uid');
-                            displayNamePath.node.id = generateId;
-                            name = 'noName';
-                        }
-                    }
+                let generateId;
+                let name;
 
-                    if (name) {
-                        setDisplayName(displayNamePath, id || generateId, types, getComponentName(name, state, types));
-                    }
+                const proccessName = (node) =>
+                    types.isMemberExpression(node) ? `${node.object.name}.${node.property.name}` : node.name;
+
+                if (id) {
+                    name = Array.isArray(id)
+                        ? id.reduce((result, node) => `${result}${result ? '.' : ''}${proccessName(node)}`, '')
+                        : proccessName(id);
+                }
+
+                if (types.isExportDefaultDeclaration(displayNamePath.container) && displayNamePath.node.id == null) {
+                    generateId = displayNamePath.scope.generateUidIdentifier('uid');
+                    displayNamePath.node.id = generateId;
+                    name = 'noName';
+                }
+
+                if (name) {
+                    setDisplayName(displayNamePath, id || generateId, types, getComponentName(name, state));
                 }
             },
         },
     };
 }
 
-function getComponentName(componentName, state, types) {
+function getComponentName(componentName, state) {
     const extension = pathNode.extname(state.file.opts.filename);
     const name = pathNode.basename(state.file.opts.filename, extension);
     const lastTwoFoldersWithFileName = state.file.opts.filename.match(`([^/]+)\/([^/]+)\/${name}`);
 
-    const proccessName = (node) => {
-        if (types.isMemberExpression(node)) {
-            return `${node.object.name}.${node.property.name}`;
-        }
-
-        return node.name;
-    };
-
-    const nameComponent = Array.isArray(componentName)
-        ? componentName.reverse().reduce((result, node) => `${result}${result ? '.' : ''}${proccessName(node)}`, '')
-        : componentName;
-    
-    return `${lastTwoFoldersWithFileName && lastTwoFoldersWithFileName[0]}/${nameComponent}`;
+    return `${lastTwoFoldersWithFileName && lastTwoFoldersWithFileName[0]}/${componentName}`;
 }
 
 function findCandidate(parentPath, types) {
@@ -74,18 +71,18 @@ function findCandidate(parentPath, types) {
         let expressionPath;
 
         expressionPath = path.findParent((path) => {
-            if (path.isCallExpression()) {
-                if (
-                    path.node &&
-                    path.node.callee &&
-                    path.node.callee.name &&
-                    path.node.callee.name === '_createClass'
-                ) {
-                    expressionId = {};
-                    return true;
-                }
-                return false;
+            if (
+                path.isCallExpression() &&
+                path.node &&
+                path.node.callee &&
+                path.node.callee.name &&
+                path.node.callee.name === '_createClass'
+            ) {
+                expressionId = {};
+                return true;
             }
+
+            return false;
         });
 
         if (!expressionId) {
@@ -104,6 +101,8 @@ function findCandidate(parentPath, types) {
                     expressionId = path.node.id;
                     return true;
                 }
+
+                return false;
             });
         }
 
@@ -130,7 +129,7 @@ function findCandidate(parentPath, types) {
         id = expressionId;
 
         if (memberExpressionNodes.length > 0) {
-            id = memberExpressionNodes;
+            id = memberExpressionNodes.reverse();
         }
 
         displayNamePath = expressionPath;
@@ -151,6 +150,8 @@ function findCandidate(parentPath, types) {
             displayNamePath = path;
             return !!id;
         }
+
+        return false;
     });
 
     return {

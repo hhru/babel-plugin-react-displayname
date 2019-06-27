@@ -107,3 +107,5 @@ ClassComponentWithStaticPropComponent.displayName = 'env/classComponents/input/C
 ClassComponentWithStaticPropComponent.get = function () {
     return _react2.default.createElement('div', null);
 };
+
+ClassComponentWithStaticPropComponent.get.displayName = 'env/classComponents/input/ClassComponentWithStaticPropComponent.get';

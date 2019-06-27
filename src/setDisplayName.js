@@ -14,11 +14,14 @@ module.exports = {
                 (node) => types.isThisExpression(node.object) || (node.object && node.object.name === '_this')
             );
         } else {
+            const getName = (node) => (types.isMemberExpression(node) ? node.object.name : node.name);
+            const declarationName = getName(nameNodeId);
+
             abortAppend =
-                TRANSPILE_ANONYMOUS_FUNCTION_NAME_START_SUMBOL !== nameNodeId.name.charAt(0) &&
-                nameNodeId.name.charAt(0) === nameNodeId.name.charAt(0).toLocaleLowerCase();
+                TRANSPILE_ANONYMOUS_FUNCTION_NAME_START_SUMBOL !== declarationName.charAt(0) &&
+                declarationName.charAt(0) === declarationName.charAt(0).toLocaleLowerCase();
         }
-    
+
         if (abortAppend || !name || displayNames[name]) {
             return;
         }
@@ -33,10 +36,7 @@ module.exports = {
 
         if (Array.isArray(nameNodeId)) {
             for (let i = 0; i < nameNodeId.length; i += 2) {
-                node = types.memberExpression(
-                    node || nameNodeId[i],
-                    node ? nameNodeId[i] : nameNodeId[i + 1]
-                );
+                node = types.memberExpression(node || nameNodeId[i], node ? nameNodeId[i] : nameNodeId[i + 1]);
             }
         } else {
             node = nameNodeId;
@@ -51,9 +51,6 @@ module.exports = {
         );
 
         displayNames[name] = true;
-
-        if (!abortAppend) {
-            blockLevelStatement.insertAfter(displayNameStatement);
-        }
+        blockLevelStatement.insertAfter(displayNameStatement);
     },
 };
