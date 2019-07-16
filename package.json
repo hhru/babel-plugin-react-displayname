@@ -1,15 +1,16 @@
 {
     "name": "@hh.ru/babel-plugin-react-displayname",
-    "version": "0.5.0",
+    "version": "0.5.1",
     "main": "lib/index.js",
     "devDependencies": {
+        "@babel/cli": "^7.5.0",
+        "@babel/plugin-proposal-class-properties": "^7.5.0",
+        "@babel/plugin-proposal-function-bind": "^7.2.0",
+        "@babel/preset-env": "^7.5.4",
+        "@babel/preset-react": "^7.0.0",
+        "@babel/register": "^7.5.5",
         "@hh.ru/eslint-config": "^5.0.2",
-        "babel-cli": "^6.26.0",
         "babel-eslint": "^10.0.2",
-        "babel-plugin-transform-class-properties": "^6.24.1",
-        "babel-preset-env": "^1.6.1",
-        "babel-preset-react": "~6.24.1",
-        "babel-preset-stage-0": "^6.16.0",
         "eslint": "~5.7.0",
         "eslint-config-prettier": "^6.0.0",
         "eslint-plugin-prettier": "^3.1.0",
@@ -25,7 +26,7 @@
     "scripts": {
         "clean": "rm -rf lib",
         "build": "babel src -d lib",
-        "test": "mocha --compilers js:babel-register",
+        "test": "mocha --compilers js:@babel/register",
         "test:watch": "yarn run test -- --watch",
         "prepublish": "yarn clean && yarn build"
     },
@@ -33,7 +34,7 @@
         "babel-plugin-react-displayname"
     ],
     "license": "MIT",
-    "peerDependencies": {
-        "@babel/core": "^6.0.1"
+    "dependencies": {
+        "@babel/core": "^7.5.4"
     }
 }

@@ -51,7 +51,7 @@ class ClassComponent1 extends React.Component {
     static ObjectPropertyComponent1 = {
         invariant: (content) => <div>{content}</div>,
     };
-    
+
     render() {
         return <ClassComponent1.ObjectPropertyComponent1.invariant content="text content" />;
     }

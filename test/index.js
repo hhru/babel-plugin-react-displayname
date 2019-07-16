@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import assert from 'assert';
-import { transformFileSync } from 'babel-core';
+import { transformFileSync } from '@babel/core';
 
 const plugin = path.join(__dirname, '../src/index.js');
 const fixturesDirEnv = path.join(__dirname, 'fixtures/env');
@@ -14,8 +14,8 @@ const trim = (str) => {
 const transformFile = (filename, isEnvPreset) =>
     transformFileSync(filename, {
         babelrc: false,
-        plugins: ['transform-class-properties', [plugin]],
-        presets: ['react', 'stage-0'].concat(isEnvPreset ? ['env'] : []),
+        plugins: ['@babel/plugin-proposal-class-properties', [plugin]],
+        presets: ['@babel/preset-react'].concat(isEnvPreset ? ['@babel/preset-env'] : []),
     }).code;
 
 describe('Transform add display name in react elements with env presets', function() {
