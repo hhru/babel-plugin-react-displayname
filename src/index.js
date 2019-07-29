@@ -5,7 +5,7 @@ const { setDisplayName, resetCache } = require('./setDisplayName');
 
 function transform({ types }) {
     return {
-        name: 'babel-plugin-transform-es2015-unicode-regex',
+        name: '@hh.ru/babel-plugin-react-displayname',
         visitor: {
             // Root point
             Program() {
@@ -40,7 +40,7 @@ function transform({ types }) {
                         : proccessName(id);
                 }
 
-                if (types.isExportDefaultDeclaration(displayNamePath.container) && displayNamePath.node.id == null) {
+                if (types.isExportDefaultDeclaration(displayNamePath.container) && displayNamePath.node.id == null && !types.isCallExpression(displayNamePath)) {
                     generateId = displayNamePath.scope.generateUidIdentifier('uid');
                     displayNamePath.node.id = generateId;
                     name = 'noName';
@@ -95,6 +95,11 @@ function findCandidate(parentPath, types) {
                 if (path.isObjectProperty()) {
                     expressionId = path.node.key;
                     return true;
+                }
+
+                if( path.isCallExpression()) {
+                    expressionId = path.node.arguments[1];
+                    return true
                 }
 
                 if (path.isVariableDeclarator()) {
