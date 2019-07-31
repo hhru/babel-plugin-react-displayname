@@ -36,7 +36,7 @@ function transform({ types }) {
 
                 if (id) {
                     name = Array.isArray(id)
-                        ? id.reduce((result, node) => `${result}${result ? '.' : ''}${proccessName(node)}`, '')
+                        ? id.reduce((result, node) => `${result}${result ? '.' : ''}${node ? proccessName(node) : ''}`, '')
                         : proccessName(id);
                 }
 

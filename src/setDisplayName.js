@@ -11,7 +11,7 @@ module.exports = {
 
         if (Array.isArray(nameNodeId)) {
             abortAppend = nameNodeId.some(
-                (node) => types.isThisExpression(node.object) || (node.object && node.object.name === '_this') || types.isStringLiteral(node)
+                (node) => !node || types.isThisExpression(node.object) || (node.object && node.object.name === '_this') || types.isStringLiteral(node)
             );
         } else {
             const getName = (node) => (types.isMemberExpression(node) ? node.object.name : node.name);
