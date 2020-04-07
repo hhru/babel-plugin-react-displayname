@@ -1,8 +1,9 @@
 {
     "name": "@hh.ru/babel-plugin-react-displayname",
-    "version": "0.5.2",
+    "version": "0.5.3",
     "main": "lib/index.js",
     "devDependencies": {
+        "@babel/core": "^7.5.4",
         "@babel/cli": "^7.5.0",
         "@babel/plugin-proposal-class-properties": "^7.5.0",
         "@babel/plugin-proposal-function-bind": "^7.2.0",
@@ -15,7 +16,7 @@
         "eslint-config-prettier": "^6.0.0",
         "eslint-plugin-prettier": "^3.1.0",
         "eslint-plugin-react": "7.11.0",
-        "mocha": "5.2.0",
+        "mocha": "^7.1.1",
         "prettier": "^1.18.2"
     },
     "repository": {
@@ -26,7 +27,7 @@
     "scripts": {
         "clean": "rm -rf lib",
         "build": "babel src -d lib",
-        "test": "mocha --compilers js:@babel/register",
+        "test": "mocha --require @babel/register",
         "test:watch": "yarn run test -- --watch",
         "prepublish": "yarn clean && yarn build"
     },
@@ -34,7 +35,7 @@
         "babel-plugin-react-displayname"
     ],
     "license": "MIT",
-    "dependencies": {
-        "@babel/core": "^7.5.4"
+    "resolutions": {
+        "kind-of": "6.0.3"
     }
 }
