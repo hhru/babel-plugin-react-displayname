@@ -1,6 +1,6 @@
 {
     "name": "@hh.ru/babel-plugin-react-displayname",
-    "version": "0.5.4",
+    "version": "0.5.5",
     "main": "lib/index.js",
     "devDependencies": {
         "@babel/core": "^7.5.4",
