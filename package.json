@@ -29,7 +29,8 @@
         "build": "babel src -d lib",
         "test": "mocha --require @babel/register",
         "test:watch": "yarn run test -- --watch",
-        "prepublish": "yarn clean && yarn build"
+        "prepublish": "yarn clean && yarn build",
+        "release": "npm publish --access=public"
     },
     "keywords": [
         "babel-plugin-react-displayname"
