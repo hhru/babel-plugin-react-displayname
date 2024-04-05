@@ -1,6 +1,6 @@
 let displayNames = {};
 
-const TRANSPILE_ANONYMOUS_FUNCTION_NAME_START_SUMBOL = '_';
+const TRANSPILE_ANONYMOUS_FUNCTION_NAME_START_SYMBOL = '_';
 
 module.exports = {
     resetCache() {
@@ -18,7 +18,7 @@ module.exports = {
             const declarationName = getName(nameNodeId);
 
             abortAppend =
-                TRANSPILE_ANONYMOUS_FUNCTION_NAME_START_SUMBOL !== declarationName.charAt(0) &&
+                TRANSPILE_ANONYMOUS_FUNCTION_NAME_START_SYMBOL !== declarationName.charAt(0) &&
                 declarationName.charAt(0) === declarationName.charAt(0).toLocaleLowerCase();
         }
 

@@ -4,6 +4,40 @@ const classHasRenderMethod = require('./classHasRenderMethod');
 const { setDisplayName, resetCache } = require('./setDisplayName');
 
 function transform({ types }) {
+    const parseElement = (path, state) => {
+        const { id, displayNamePath } = findCandidate(path, types);
+
+        if (!displayNamePath) {
+            return;
+        }
+
+        let generateId;
+        let name;
+
+        const proccessName = (node) =>
+            types.isMemberExpression(node) ? `${node.object.name}.${node.property.name}` : node.name;
+
+        if (id) {
+            name = Array.isArray(id)
+                ? id.reduce((result, node) => `${result}${result ? '.' : ''}${node ? proccessName(node) : ''}`, '')
+                : proccessName(id);
+        }
+
+        if (
+            types.isExportDefaultDeclaration(displayNamePath.container)
+            && displayNamePath.node.id == null
+            && !types.isCallExpression(displayNamePath)
+        ) {
+            generateId = displayNamePath.scope.generateUidIdentifier('uid');
+            displayNamePath.node.id = generateId;
+            name = 'noName';
+        }
+
+        if (name) {
+            setDisplayName(displayNamePath, id || generateId, types, getComponentName(name, state));
+        }
+    }
+
     return {
         name: '@hh.ru/babel-plugin-react-displayname',
         visitor: {
@@ -21,35 +55,8 @@ function transform({ types }) {
                     );
                 }
             },
-            JSXElement(path, state) {
-                const { id, displayNamePath } = findCandidate(path, types);
-
-                if (!displayNamePath) {
-                    return;
-                }
-
-                let generateId;
-                let name;
-
-                const proccessName = (node) =>
-                    types.isMemberExpression(node) ? `${node.object.name}.${node.property.name}` : node.name;
-
-                if (id) {
-                    name = Array.isArray(id)
-                        ? id.reduce((result, node) => `${result}${result ? '.' : ''}${node ? proccessName(node) : ''}`, '')
-                        : proccessName(id);
-                }
-
-                if (types.isExportDefaultDeclaration(displayNamePath.container) && displayNamePath.node.id == null && !types.isCallExpression(displayNamePath)) {
-                    generateId = displayNamePath.scope.generateUidIdentifier('uid');
-                    displayNamePath.node.id = generateId;
-                    name = 'noName';
-                }
-
-                if (name) {
-                    setDisplayName(displayNamePath, id || generateId, types, getComponentName(name, state));
-                }
-            },
+            JSXElement: parseElement,
+            JSXFragment: parseElement,
         },
     };
 }
@@ -92,17 +99,17 @@ function findCandidate(parentPath, types) {
                     return true;
                 }
 
-                if (path.isObjectProperty()) {
+                if (path.isObjectProperty() && !types.isObjectPattern(path.parentPath.node)) {
                     expressionId = path.node.key;
                     return true;
                 }
 
-                if( path.isCallExpression()) {
+                if (path.isCallExpression()) {
                     expressionId = path.node.arguments[1];
                     return true
                 }
 
-                if (path.isVariableDeclarator()) {
+                if (path.isVariableDeclarator() && !types.isObjectPattern(path.node.id)) {
                     expressionId = path.node.id;
                     return true;
                 }
