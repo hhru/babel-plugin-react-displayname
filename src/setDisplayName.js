@@ -36,7 +36,8 @@ module.exports = {
 
         if (Array.isArray(nameNodeId)) {
             for (let i = 0; i < nameNodeId.length; i += 2) {
-                node = types.memberExpression(node || nameNodeId[i], node ? nameNodeId[i] : nameNodeId[i + 1]);
+                const propertyId = node ? nameNodeId[i] : nameNodeId[i + 1];
+                node = types.memberExpression(node || nameNodeId[i], propertyId, types.isMemberExpression(propertyId));
             }
         } else {
             node = nameNodeId;
