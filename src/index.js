@@ -6,9 +6,9 @@ const { setDisplayName, resetCache } = require('./setDisplayName');
 const appendComponentPath = (componentName, state) => {
     const extension = pathNode.extname(state.file.opts.filename);
     const name = pathNode.basename(state.file.opts.filename, extension);
-    const lastTwoFoldersWithFileName = state.file.opts.filename.match(`([^/]+)\/([^/]+)\/${name}`);
+    const lastTwoFoldersWithFileName = state.file.opts.filename.match(`([^/]+)/([^/]+)/${name}`);
 
-    return `${lastTwoFoldersWithFileName && lastTwoFoldersWithFileName[0]}/${componentName}`;
+    return `${lastTwoFoldersWithFileName ? lastTwoFoldersWithFileName[0] : ''}/${componentName}`;
 }
 
 const getNodeId = (node, types) => {
