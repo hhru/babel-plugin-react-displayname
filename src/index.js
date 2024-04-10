@@ -44,15 +44,15 @@ const getComplexDisplayName = (nameNodes, types, state) => {
 }
 
 const getObjectPropertyNameNodes = (path, types) => {
-    const namePaths = [path.node];
+    const nameNodes = [path.node];
 
     const next = path.findParent((path) => path.isObjectProperty() && !types.isObjectPattern(path.parentPath.node));
 
     if (next) {
-        return namePaths.concat(getObjectPropertyNameNodes(next, types));
+        return nameNodes.concat(getObjectPropertyNameNodes(next, types));
     }
 
-    return namePaths;
+    return nameNodes;
 };
 
 const isProgramScope = (path) => path.scope.path.isProgram() || (path.isDeclaration() && path.parentPath.isProgram());
