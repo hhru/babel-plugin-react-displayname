@@ -3,39 +3,177 @@ const pathNode = require('path');
 const classHasRenderMethod = require('./classHasRenderMethod');
 const { setDisplayName, resetCache } = require('./setDisplayName');
 
+const appendComponentPath = (componentName, state) => {
+    const extension = pathNode.extname(state.file.opts.filename);
+    const name = pathNode.basename(state.file.opts.filename, extension);
+    const lastTwoFoldersWithFileName = state.file.opts.filename.match(`([^/]+)/([^/]+)/${name}`);
+
+    return `${lastTwoFoldersWithFileName ? lastTwoFoldersWithFileName[0] : ''}/${componentName}`;
+}
+
+const getNodeId = (node, types) => {
+    if (types.isObjectProperty(node)) {
+        return node.key;
+    }
+
+    if (types.isAssignmentExpression(node)) {
+        return node.left;
+    }
+
+    return node.id;
+}
+
+const processName = (node, isComputed, types) => {
+    const name = types.isMemberExpression(node)
+        ? `${node.object.name}.${node.property.name}`
+        : node.name;
+
+    return isComputed ? `[${name}]` : `.${name}`;
+}
+
+const getComplexDisplayName = (nameNodes, types, state) => {
+    const literalName = nameNodes
+        .reduce(
+            (result, node) =>
+                `${result}${processName(getNodeId(node, types), types.isObjectProperty(node) && node.computed, types)}`,
+            ''
+        )
+        .slice(1);
+
+    return appendComponentPath(literalName, state);
+}
+
+const getObjectPropertyNameNodes = (path, types) => {
+    const nameNodes = [path.node];
+
+    const next = path.findParent((path) => path.isObjectProperty() && !types.isObjectPattern(path.parentPath.node));
+
+    if (next) {
+        return nameNodes.concat(getObjectPropertyNameNodes(next, types));
+    }
+
+    return nameNodes;
+};
+
+const isProgramScope = (path) => path.scope.path.isProgram() || (path.isDeclaration() && path.parentPath.isProgram());
+
+const isDirectlyExported = (path) => path.parentPath.isExportDeclaration();
+
+const isInClassBody = (path) => !!path.findParent((item) => item.isClassBody());
+
+const findNameCandidates = (parentPath, types) => {
+    let candidates = [];
+
+    parentPath.findParent((path) => {
+        if (path.isFunctionDeclaration() && (isProgramScope(path) || isDirectlyExported(path))) {
+            candidates.push(path);
+            return true;
+        }
+
+        if (path.isClassDeclaration()) {
+            candidates.push(path);
+            return false;
+        }
+
+        /* We filter ObjectPattern as it's an object destructuring */
+        if (path.isObjectProperty() && !types.isObjectPattern(path.parentPath.node)) {
+            if (candidates.some((item) => item.isObjectProperty())) {
+                /* We're interested only in bottom one, will traverse up anyway */
+                return false;
+            }
+            candidates.push(path);
+            return false;
+        }
+
+        if ((path.isVariableDeclarator() || path.isAssignmentExpression()) && !isInClassBody(path)) {
+            /* We're interested only in top one, remove previous declarations */
+            candidates = candidates.filter((item) => !item.isVariableDeclarator() && !item.isAssignmentExpression());
+            candidates.push(path);
+            return false;
+        }
+
+        return false;
+    });
+
+    return candidates;
+}
+
 function transform({ types }) {
     const parseElement = (path, state) => {
-        const { id, displayNamePath } = findCandidate(path, types);
+        const candidates = findNameCandidates(path, types)
 
-        if (!displayNamePath) {
+        if (!candidates.length) {
             return;
         }
 
-        let generateId;
-        let name;
+        const displayNamePlacements = []
+        const processedDeclarationPaths = [];
 
-        const proccessName = (node) =>
-            types.isMemberExpression(node) ? `${node.object.name}.${node.property.name}` : node.name;
+        for (const candidatePath of candidates) {
+            if (candidatePath.isFunctionDeclaration()) {
+                if (!candidatePath.node.id) {
+                    /* anonymous function */
+                    candidatePath.node.id = candidatePath.scope.generateUidIdentifier('uid');
+                    displayNamePlacements.push({
+                        id: candidatePath.node.id,
+                        path: candidatePath,
+                        name: appendComponentPath('NoName', state)
+                    });
+                } else {
+                    displayNamePlacements.push({
+                        id: candidatePath.node.id,
+                        path: candidatePath,
+                        name: appendComponentPath(candidatePath.node.id.name, state)
+                    });
+                }
+            }
 
-        if (id) {
-            name = Array.isArray(id)
-                ? id.reduce((result, node) => `${result}${result ? '.' : ''}${node ? proccessName(node) : ''}`, '')
-                : proccessName(id);
+            if (candidatePath.isClassDeclaration()) {
+                displayNamePlacements.push({
+                    id: candidatePath.node.id,
+                    path: candidatePath,
+                    name: appendComponentPath(candidatePath.node.id.name, state)
+                });
+            }
+
+            if (candidatePath.isAssignmentExpression() && !processedDeclarationPaths.includes(candidatePath)) {
+                displayNamePlacements.push({
+                    id: candidatePath.node.left,
+                    path: candidatePath.parentPath,
+                    name: appendComponentPath(candidatePath.node.left.name, state)
+                });
+            }
+
+            if (candidatePath.isVariableDeclarator() && !processedDeclarationPaths.includes(candidatePath)) {
+                displayNamePlacements.push({
+                    id: candidatePath.node.id,
+                    path: candidatePath.parentPath,
+                    name: appendComponentPath(candidatePath.node.id.name, state)
+                });
+            }
+
+            if (candidatePath.isObjectProperty()) {
+                const objectNamePath = candidatePath.findParent((path) => {
+                    return path.isVariableDeclarator() || path.isAssignmentExpression()
+                });
+
+                if (objectNamePath) {
+                    processedDeclarationPaths.push(objectNamePath);
+
+                    const nameNodes = [objectNamePath.node].concat(getObjectPropertyNameNodes(candidatePath, types).reverse());
+
+                    displayNamePlacements.push({
+                        id: nameNodes.map((item) => getNodeId(item, types)),
+                        path: objectNamePath,
+                        name: getComplexDisplayName(nameNodes, types, state),
+                    })
+                }
+            }
         }
 
-        if (
-            types.isExportDefaultDeclaration(displayNamePath.container)
-            && displayNamePath.node.id == null
-            && !types.isCallExpression(displayNamePath)
-        ) {
-            generateId = displayNamePath.scope.generateUidIdentifier('uid');
-            displayNamePath.node.id = generateId;
-            name = 'noName';
-        }
-
-        if (name) {
-            setDisplayName(displayNamePath, id || generateId, types, getComponentName(name, state));
-        }
+        displayNamePlacements.forEach(({id, path, name}) => {
+            setDisplayName(path, id, types, name);
+        });
     }
 
     return {
@@ -51,124 +189,13 @@ function transform({ types }) {
                         path,
                         path.node.id,
                         types,
-                        getComponentName(path.node.id && path.node.id.name, state)
+                        appendComponentPath(path.node.id && path.node.id.name, state)
                     );
                 }
             },
             JSXElement: parseElement,
             JSXFragment: parseElement,
         },
-    };
-}
-
-function getComponentName(componentName, state) {
-    const extension = pathNode.extname(state.file.opts.filename);
-    const name = pathNode.basename(state.file.opts.filename, extension);
-    const lastTwoFoldersWithFileName = state.file.opts.filename.match(`([^/]+)\/([^/]+)\/${name}`);
-
-    return `${lastTwoFoldersWithFileName && lastTwoFoldersWithFileName[0]}/${componentName}`;
-}
-
-function findCandidate(parentPath, types) {
-    let id;
-    let displayNamePath;
-
-    const findExpression = (path) => {
-        let expressionId;
-        let expressionPath;
-
-        expressionPath = path.findParent((path) => {
-            if (
-                path.isCallExpression() &&
-                path.node &&
-                path.node.callee &&
-                path.node.callee.name &&
-                path.node.callee.name === '_createClass'
-            ) {
-                expressionId = {};
-                return true;
-            }
-
-            return false;
-        });
-
-        if (!expressionId) {
-            expressionPath = path.findParent((path) => {
-                if (path.isAssignmentExpression()) {
-                    expressionId = path.node.left;
-                    return true;
-                }
-
-                if (path.isObjectProperty() && !types.isObjectPattern(path.parentPath.node)) {
-                    expressionId = path.node.key;
-                    return true;
-                }
-
-                if (path.isCallExpression()) {
-                    expressionId = path.node.arguments[1];
-                    return true
-                }
-
-                if (path.isVariableDeclarator() && !types.isObjectPattern(path.node.id)) {
-                    expressionId = path.node.id;
-                    return true;
-                }
-
-                return false;
-            });
-        }
-
-        return { expressionId, expressionPath };
-    };
-
-    function getMemberExpressionNodes(id, path, classPropertiesList = []) {
-        if (types.isObjectProperty(path)) {
-            if (classPropertiesList.length === 0) {
-                classPropertiesList.push(id);
-            }
-            const { expressionId, expressionPath } = findExpression(path);
-            classPropertiesList.push(expressionId);
-            getMemberExpressionNodes(expressionId, expressionPath, classPropertiesList);
-        }
-
-        return classPropertiesList;
-    }
-
-    const getFunctionExpressionId = (path) => {
-        const { expressionId, expressionPath } = findExpression(path);
-        const memberExpressionNodes = getMemberExpressionNodes(expressionId, expressionPath);
-
-        id = expressionId;
-
-        if (memberExpressionNodes.length > 0) {
-            id = memberExpressionNodes.reverse();
-        }
-
-        displayNamePath = expressionPath;
-        return !!id;
-    };
-
-    parentPath.findParent((path) => {
-        if (path.isFunctionExpression()) {
-            return getFunctionExpressionId(path);
-        }
-
-        if (path.isArrowFunctionExpression()) {
-            return getFunctionExpressionId(path);
-        }
-
-        if (path.isFunctionDeclaration()) {
-            id = path.node.id;
-            displayNamePath = path;
-            return !!id;
-        }
-
-        return false;
-    });
-
-    return {
-        id,
-        displayNamePath,
     };
 }
 
