@@ -67,3 +67,9 @@ class ClassComponent1 extends React.Component {
   }
 }
 ClassComponent1.displayName = "fixtures/objectPropertyComponents/input/ClassComponent1";
+const ObjectPropertyComponentElement = {
+  vasya: /*#__PURE__*/_jsx(Vasiliy, {}),
+  petya: /*#__PURE__*/_jsx(Petiliy, {
+    children: "da"
+  })
+};

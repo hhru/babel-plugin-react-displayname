@@ -42,12 +42,10 @@ export function Component2({
   return render();
 }
 Component2.displayName = "fixtures/exportCallExpression/input/Component2";
-const _generatedConstant4 = /*#__PURE__*/_jsx(Icon, {
+const ICON_ARROW_UP = renderToString( /*#__PURE__*/_jsx(Icon, {
   initial: IconColor.White,
   view: IconView.Arrow,
   scale: IconScale.Small,
   kind: IconKind.Up
-});
-_generatedConstant4.displayName = "fixtures/exportCallExpression/input/ICON_ARROW_UP";
-const ICON_ARROW_UP = renderToString(_generatedConstant4);
+}));
 export default ICON_ARROW_UP;

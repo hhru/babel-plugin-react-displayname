@@ -144,10 +144,39 @@ const getCallExpressionFunctionParamIndex = (parentsList, callerPath, callExpres
     return callExpressionArguments.findIndex((item) => item === closestChildPath.node);
 }
 
+const isComponentCall = (jsxElementPath, parents, types) => {
+    let openingElementNode = jsxElementPath.node.openingElement.name;
+    while (types.isJSXMemberExpression(openingElementNode)) {
+        openingElementNode = openingElementNode.object
+    }
+
+    const elementName = openingElementNode.name;
+    if (elementName === 'Fragment' || elementName.charAt(0) === elementName.charAt(0).toLocaleLowerCase()) {
+        return false;
+    }
+
+    return !parents.some((item) =>
+        item.isArrowFunctionExpression()
+        || item.isFunctionDeclaration()
+        || item.isFunctionExpression()
+        || item.isCallExpression()
+    )
+}
+
 function transform({ types }) {
     const parseElement = (path, state) => {
-        const candidates = findNameCandidates(path, types)
         const parents = traverseParents(path);
+        if (
+            path.isJSXElement() &&
+            (
+                isComponentCall(path, parents, types)
+                || parents.some((item) => item !== path && (item.isJSXElement() || item.isJSXFragment()))
+            )
+        ) {
+            return;
+        }
+
+        const candidates = findNameCandidates(path, types)
 
         if (!candidates.length) {
             return;

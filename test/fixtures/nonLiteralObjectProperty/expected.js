@@ -4,11 +4,11 @@ const Variants = {
   Two: 'twoVariant'
 };
 const ComponentsObject = {
-  [Variants.One]: /*#__PURE__*/_jsx(Social, {
-    someProp: true
+  [Variants.One]: /*#__PURE__*/_jsx("div", {
+    children: "one"
   }),
-  [Variants.Two]: /*#__PURE__*/_jsx(Social, {
-    otherProp: true
+  [Variants.Two]: /*#__PURE__*/_jsx("div", {
+    children: "two"
   })
 };
 ComponentsObject[Variants.Two].displayName = "fixtures/nonLiteralObjectProperty/input/ComponentsObject[Variants.Two]";
@@ -17,11 +17,11 @@ const ComponentWithVariants = ({
   variant
 }) => {
   const Components = {
-    [Variants.One]: /*#__PURE__*/_jsx(Social, {
-      someProp: true
+    [Variants.One]: /*#__PURE__*/_jsx("div", {
+      children: "one"
     }),
-    [Variants.Two]: /*#__PURE__*/_jsx(Social, {
-      otherProp: true
+    [Variants.Two]: /*#__PURE__*/_jsx("div", {
+      children: "two"
     })
   };
   Components[Variants.Two].displayName = "fixtures/nonLiteralObjectProperty/input/Components[Variants.Two]";

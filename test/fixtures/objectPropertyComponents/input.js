@@ -56,3 +56,8 @@ class ClassComponent1 extends React.Component {
         return <ClassComponent1.ObjectPropertyComponent1.invariant content="text content" />;
     }
 }
+
+const ObjectPropertyComponentElement = {
+    vasya: <Vasiliy />,
+    petya: <Petiliy>da</Petiliy>
+}

@@ -4,14 +4,14 @@ const Variants = {
 };
 
 const ComponentsObject =  {
-    [Variants.One]: <Social someProp />,
-    [Variants.Two]: <Social otherProp />
+    [Variants.One]: <div>one</div>,
+    [Variants.Two]: <div>two</div>
 }
 
 const ComponentWithVariants = ({ variant }) => {
     const Components =  {
-        [Variants.One]: <Social someProp />,
-        [Variants.Two]: <Social otherProp />
+        [Variants.One]: <div>one</div>,
+        [Variants.Two]: <div>two</div>
     }
 
     const Component = Components[variant];
