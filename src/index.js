@@ -159,7 +159,6 @@ const isComponentCall = (jsxElementPath, parents, types) => {
         item.isArrowFunctionExpression()
         || item.isFunctionDeclaration()
         || item.isFunctionExpression()
-        || item.isCallExpression()
     )
 }
 
@@ -176,6 +175,7 @@ function transform({ types }) {
             return;
         }
 
+        const readableParents = parents.map((item) => item.node.type);
         const candidates = findNameCandidates(path, types)
 
         if (!candidates.length) {
