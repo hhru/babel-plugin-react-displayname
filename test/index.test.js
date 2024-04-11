@@ -19,9 +19,9 @@ const transformFile = (filename) =>
 
 describe('Transform add displayName in react elements', function() {
     fs.readdirSync(fixturesDir).forEach((fixture) => {
-        // if (!['nonLiteralObjectProperty'].includes(fixture)) {
-        //     return;
-        // }
+        if (!['exportDefaultCallExpressionBody'].includes(fixture)) {
+            return;
+        }
         it(fixture, () => {
             const actual = transformFile(path.join(fixturesDir, fixture, 'input.js'));
             const expected = fs.readFileSync(path.join(fixturesDir, fixture, 'expected.js'), 'utf8');

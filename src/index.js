@@ -118,7 +118,7 @@ const traverseParents = (path) => {
         nextParent = nextParent.parentPath;
     }
 
-    return result.reverse();
+    return result;
 }
 
 const cloneAsConstant = (node, path, types) => {
@@ -139,7 +139,7 @@ const cloneAsConstant = (node, path, types) => {
 const getCallExpressionFunctionParamIndex = (parentsList, callerPath, callExpressionArguments) => {
     const callerIndex = parentsList.indexOf(callerPath);
     const closestChildPath = parentsList[
-        parentsList.findIndex((item, index) => item.isCallExpression() && index >= callerIndex) + 1
+        parentsList.findIndex((item, index) => item.isCallExpression() && index < callerIndex) - 1
     ];
     return callExpressionArguments.findIndex((item) => item === closestChildPath.node);
 }
@@ -155,11 +155,22 @@ const isComponentCall = (jsxElementPath, parents, types) => {
         return false;
     }
 
-    return !parents.some((item) =>
-        item.isArrowFunctionExpression()
-        || item.isFunctionDeclaration()
-        || item.isFunctionExpression()
-    )
+    const firstFunctionParent = parents.findIndex(
+        (item) =>
+            item.isArrowFunctionExpression()
+            || item.isFunctionDeclaration()
+            || item.isFunctionExpression()
+    );
+
+    if (firstFunctionParent === -1) {
+        return true;
+    }
+
+    const firstDeclaratorParent = parents.findIndex(
+        (item) => item.isVariableDeclarator() || item.isAssignmentExpression()
+    );
+
+    return (firstDeclaratorParent !== -1 && firstDeclaratorParent < firstFunctionParent)
 }
 
 function transform({ types }) {
