@@ -1,13 +1,15 @@
 import { Fragment as _Fragment, jsx as _jsx } from "react/jsx-runtime";
-export const HocFunctionFragmentComponent = translation(({
+const _generatedConstant = ({
   trls
 }) => /*#__PURE__*/_jsx(_Fragment, {
   children: trls
-}));
-HocFunctionFragmentComponent.displayName = "fixtures/hocFunctionComponent/input/HocFunctionFragmentComponent";
-const HocFunctionElementComponent = translation(({
+});
+_generatedConstant.displayName = "fixtures/hocFunctionComponent/input/HocFunctionFragmentComponent";
+export const HocFunctionFragmentComponent = translation(_generatedConstant);
+const _generatedConstant2 = ({
   trls
 }) => /*#__PURE__*/_jsx("div", {
   children: trls
-}));
-HocFunctionElementComponent.displayName = "fixtures/hocFunctionComponent/input/HocFunctionElementComponent";
+});
+_generatedConstant2.displayName = "fixtures/hocFunctionComponent/input/HocFunctionElementComponent";
+const HocFunctionElementComponent = translation(_generatedConstant2);
