@@ -61,3 +61,15 @@ const ObjectPropertyComponentElement = {
     vasya: <Vasiliy />,
     petya: <Petiliy>da</Petiliy>
 }
+
+const FakeObjectProperty = ({ someCondition }) => {
+    const randomArray = [];
+
+    if (someCondition) {
+        randomArray.push({
+            Component: <div>fake</div>
+        })
+    }
+
+    return randomArray[0];
+}

@@ -73,3 +73,17 @@ const ObjectPropertyComponentElement = {
     children: "da"
   })
 };
+const FakeObjectProperty = ({
+  someCondition
+}) => {
+  const randomArray = [];
+  if (someCondition) {
+    randomArray.push({
+      Component: /*#__PURE__*/_jsx("div", {
+        children: "fake"
+      })
+    });
+  }
+  return randomArray[0];
+};
+FakeObjectProperty.displayName = "fixtures/objectPropertyComponents/input/FakeObjectProperty";

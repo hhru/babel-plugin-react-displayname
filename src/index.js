@@ -184,7 +184,8 @@ function transform({ types }) {
 
         const displayNamePlacements = [];
 
-        candidates.forEach((candidatePath, index) => {
+        candidates.forEach((candidatePath) => {
+            const currentIndex = parents.indexOf(candidatePath);
             if (processedDeclarationNodes.includes(candidatePath.node)) {
                 return;
             }
@@ -273,21 +274,29 @@ function transform({ types }) {
             }
 
             if (candidatePath.isObjectProperty()) {
-                const objectNamePath = candidatePath.findParent((path) => {
-                    return path.isVariableDeclarator() || path.isAssignmentExpression()
+                const objectExpression = candidatePath.findParent((path) => {
+                    return path.isObjectExpression() && !path.parentPath.isObjectProperty()
                 });
 
-                if (objectNamePath) {
-                    processedDeclarationNodes.push(objectNamePath.node);
-
-                    const nameNodes = [objectNamePath.node].concat(getObjectPropertyNameNodes(candidatePath, types).reverse());
-
-                    displayNamePlacements.push({
-                        id: nameNodes.map((item) => getNodeId(item, types)),
-                        path: objectNamePath,
-                        name: getComplexDisplayName(nameNodes, types),
-                    })
+                if (!objectExpression) {
+                    return;
                 }
+
+                const objectNamePath = objectExpression.parentPath;
+
+                if (!objectNamePath.isVariableDeclarator() && !objectNamePath.isAssignmentExpression()) {
+                    return;
+                }
+
+                processedDeclarationNodes.push(objectNamePath.node);
+
+                const nameNodes = [objectNamePath.node].concat(getObjectPropertyNameNodes(candidatePath, types).reverse());
+
+                displayNamePlacements.push({
+                    id: nameNodes.map((item) => getNodeId(item, types)),
+                    path: objectNamePath,
+                    name: getComplexDisplayName(nameNodes, types),
+                })
             }
         });
 
