@@ -67,3 +67,23 @@ class ClassComponent1 extends React.Component {
   }
 }
 ClassComponent1.displayName = "fixtures/objectPropertyComponents/input/ClassComponent1";
+const ObjectPropertyComponentElement = {
+  vasya: /*#__PURE__*/_jsx(Vasiliy, {}),
+  petya: /*#__PURE__*/_jsx(Petiliy, {
+    children: "da"
+  })
+};
+const FakeObjectProperty = ({
+  someCondition
+}) => {
+  const randomArray = [];
+  if (someCondition) {
+    randomArray.push({
+      Component: /*#__PURE__*/_jsx("div", {
+        children: "fake"
+      })
+    });
+  }
+  return randomArray[0];
+};
+FakeObjectProperty.displayName = "fixtures/objectPropertyComponents/input/FakeObjectProperty";
