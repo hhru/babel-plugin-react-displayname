@@ -205,6 +205,9 @@ function transform({ types }) {
                 if (types.isCallExpression(candidatePath.node.declaration)) {
                     const callExpressionArguments = candidatePath.node.declaration.arguments;
                     const paramIndex = getCallExpressionFunctionParamIndex(parents, candidatePath, callExpressionArguments);
+                    if (paramIndex === -1) {
+                        return;
+                    }
                     const { id, variableDeclaratorNode, insertedPath } = cloneAsConstant(
                         callExpressionArguments[paramIndex],
                         candidatePath,
@@ -265,6 +268,9 @@ function transform({ types }) {
                 if (types.isCallExpression(candidatePath.node.init)) {
                     const callExpressionArguments = candidatePath.node.init.arguments;
                     const paramIndex = getCallExpressionFunctionParamIndex(parents, candidatePath, callExpressionArguments);
+                    if (paramIndex === -1) {
+                        return;
+                    }
                     const { id, variableDeclaratorNode, insertedPath } = cloneAsConstant(
                         callExpressionArguments[paramIndex],
                         candidatePath.parentPath,
