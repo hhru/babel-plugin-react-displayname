@@ -1,18 +1,59 @@
-import { useMemo, useState } from 'react';
-import ImageSlide from 'lux/components/EmployerConstructor/widgets/GalleryWidget/components/ImageSlide';
 import { jsx as _jsx } from "react/jsx-runtime";
-export const SLIDE_TYPE_IMAGE = 'SLIDE_TYPE_IMAGE';
-export const SLIDE_TYPE_LOAD_AREA = 'SLIDE_TYPE_LOAD_AREA';
-export default (pictures => {
-  const [activeSlide, setActiveSlide] = useState(1);
-  const pictureSlides = useMemo(() => pictures.map(({
-    src,
-    id
-  }) => ({
-    id: `${SLIDE_TYPE_IMAGE}_${id}`,
-    content: /*#__PURE__*/_jsx(ImageSlide, {
-      src: src
+const FunctionComponentVariableDeclarationWithList = list => {
+  const content = list.map(({
+    url,
+    id,
+    text
+  }) => /*#__PURE__*/_jsx("div", {
+    className: "item",
+    children: /*#__PURE__*/_jsx("a", {
+      href: url,
+      target: "_blank",
+      children: text
     })
-  })), [pictures]);
-  return [pictureSlides, activeSlide, setActiveSlide];
-});
+  }, id));
+  return content;
+};
+FunctionComponentVariableDeclarationWithList.displayName = "fixtures/variableDeclarationInComponent/input/FunctionComponentVariableDeclarationWithList";
+const FunctionComponentVariableDeclarationWithList1 = list => {
+  const content = /*#__PURE__*/_jsx("div", {
+    children: list.map(({
+      url,
+      id,
+      text
+    }) => /*#__PURE__*/_jsx("div", {
+      className: "item",
+      children: /*#__PURE__*/_jsx("a", {
+        href: url,
+        target: "_blank",
+        children: text
+      })
+    }, id))
+  });
+  return /*#__PURE__*/_jsx("div", {
+    children: content
+  });
+};
+FunctionComponentVariableDeclarationWithList1.displayName = "fixtures/variableDeclarationInComponent/input/FunctionComponentVariableDeclarationWithList1";
+class ClassComponent extends React.Component {
+  render() {
+    const content = /*#__PURE__*/_jsx("div", {
+      children: this.props.list.map(({
+        url,
+        id,
+        text
+      }) => /*#__PURE__*/_jsx("div", {
+        className: "item",
+        children: /*#__PURE__*/_jsx("a", {
+          href: url,
+          target: "_blank",
+          children: text
+        })
+      }, id))
+    });
+    return /*#__PURE__*/_jsx("div", {
+      children: content
+    });
+  }
+}
+ClassComponent.displayName = "fixtures/variableDeclarationInComponent/input/ClassComponent";

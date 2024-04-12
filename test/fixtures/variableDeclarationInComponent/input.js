@@ -1,21 +1,44 @@
-import { useMemo, useState } from 'react';
+const FunctionComponentVariableDeclarationWithList = (list) => {
+    const content = list.map(({ url, id, text }) => (
+        <div className="item" key={id}>
+            <a href={url} target="_blank">
+                {text}
+            </a>
+        </div>
+    ));
+    return content;
+};
 
-import ImageSlide from 'lux/components/EmployerConstructor/widgets/GalleryWidget/components/ImageSlide';
-
-export const SLIDE_TYPE_IMAGE = 'SLIDE_TYPE_IMAGE';
-export const SLIDE_TYPE_LOAD_AREA = 'SLIDE_TYPE_LOAD_AREA';
-
-export default (pictures) => {
-    const [activeSlide, setActiveSlide] = useState(1);
-
-    const pictureSlides = useMemo(
-        () =>
-            pictures.map(({ src, id }) => ({
-                id: `${SLIDE_TYPE_IMAGE}_${id}`,
-                content: <ImageSlide src={src} />,
-            })),
-        [pictures]
+const FunctionComponentVariableDeclarationWithList1 = (list) => {
+    const content = (
+        <div>
+            {list.map(({ url, id, text }) => (
+                <div className="item" key={id}>
+                    <a href={url} target="_blank">
+                        {text}
+                    </a>
+                </div>
+            ))}
+        </div>
     );
 
-    return [pictureSlides, activeSlide, setActiveSlide];
+    return <div>{content}</div>;
 };
+
+class ClassComponent extends React.Component {
+    render() {
+        const content = (
+            <div>
+                {this.props.list.map(({ url, id, text }) => (
+                    <div className="item" key={id}>
+                        <a href={url} target="_blank">
+                            {text}
+                        </a>
+                    </div>
+                ))}
+            </div>
+        );
+
+        return <div>{content}</div>;
+    }
+}

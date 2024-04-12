@@ -65,8 +65,7 @@ const findNameCandidates = (parentPath, types) => {
     let candidates = [];
 
     parentPath.findParent((path) => {
-        if (path.isExportDefaultDeclaration() && candidates.length === 0) {
-            /* We didn't find anything to hook on, let's go with default export */
+        if (path.isExportDefaultDeclaration()) {
             candidates.push(path);
             return true;
         }
@@ -201,7 +200,8 @@ function transform({ types }) {
                 return;
             }
 
-            if (candidatePath.isExportDefaultDeclaration()) {
+            /* Will only process default export if nothing worked so far */
+            if (candidatePath.isExportDefaultDeclaration() && displayNamePlacements.length === 0) {
                 if (types.isCallExpression(candidatePath.node.declaration)) {
                     const callExpressionArguments = candidatePath.node.declaration.arguments;
                     const paramIndex = getCallExpressionFunctionParamIndex(parents, candidatePath, callExpressionArguments);
