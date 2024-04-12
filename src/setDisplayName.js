@@ -1,13 +1,16 @@
 let displayNames = {};
 
-const TRANSPILE_ANONYMOUS_FUNCTION_NAME_START_SUMBOL = '_';
+const TRANSPILE_ANONYMOUS_FUNCTION_NAME_START_SYMBOL = '_';
+const GENERATED_CONSTANT_NAME = 'generatedConstant';
 
 module.exports = {
+    GENERATED_CONSTANT_NAME,
     resetCache() {
         displayNames = {};
     },
     setDisplayName(path, nameNodeId, types, name) {
         let abortAppend;
+        let isGenerated;
 
         if (Array.isArray(nameNodeId)) {
             abortAppend = nameNodeId.some(
@@ -18,11 +21,11 @@ module.exports = {
             const declarationName = getName(nameNodeId);
 
             abortAppend =
-                TRANSPILE_ANONYMOUS_FUNCTION_NAME_START_SUMBOL !== declarationName.charAt(0) &&
+                TRANSPILE_ANONYMOUS_FUNCTION_NAME_START_SYMBOL !== declarationName.charAt(0) &&
                 declarationName.charAt(0) === declarationName.charAt(0).toLocaleLowerCase();
         }
 
-        if (abortAppend || !name || displayNames[name]) {
+        if (abortAppend || !name || displayNames[name] || isGenerated) {
             return;
         }
 
@@ -36,7 +39,8 @@ module.exports = {
 
         if (Array.isArray(nameNodeId)) {
             for (let i = 0; i < nameNodeId.length; i += 2) {
-                node = types.memberExpression(node || nameNodeId[i], node ? nameNodeId[i] : nameNodeId[i + 1]);
+                const propertyId = node ? nameNodeId[i] : nameNodeId[i + 1];
+                node = types.memberExpression(node || nameNodeId[i], propertyId, types.isMemberExpression(propertyId));
             }
         } else {
             node = nameNodeId;
