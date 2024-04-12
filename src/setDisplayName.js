@@ -1,16 +1,13 @@
 let displayNames = {};
 
 const TRANSPILE_ANONYMOUS_FUNCTION_NAME_START_SYMBOL = '_';
-const GENERATED_CONSTANT_NAME = 'generatedConstant';
 
 module.exports = {
-    GENERATED_CONSTANT_NAME,
     resetCache() {
         displayNames = {};
     },
     setDisplayName(path, nameNodeId, types, name) {
         let abortAppend;
-        let isGenerated;
 
         if (Array.isArray(nameNodeId)) {
             abortAppend = nameNodeId.some(
@@ -25,7 +22,7 @@ module.exports = {
                 declarationName.charAt(0) === declarationName.charAt(0).toLocaleLowerCase();
         }
 
-        if (abortAppend || !name || displayNames[name] || isGenerated) {
+        if (abortAppend || !name || displayNames[name]) {
             return;
         }
 

@@ -1,7 +1,9 @@
 const pathNode = require('path');
 
 const classHasRenderMethod = require('./classHasRenderMethod');
-const { setDisplayName, resetCache, GENERATED_CONSTANT_NAME } = require('./setDisplayName');
+const { setDisplayName, resetCache } = require('./setDisplayName');
+
+const GENERATED_CONSTANT_NAME = 'generatedConstant';
 
 let processedDeclarationNodes = [];
 
