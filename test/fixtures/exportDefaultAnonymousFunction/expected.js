@@ -1,9 +1,9 @@
 import { jsx as _jsx } from "react/jsx-runtime";
-export default function _uid({
+export default function _generatedConstant({
   value
 }) {
   return /*#__PURE__*/_jsx("p", {
     children: value
   });
 }
-_uid.displayName = "fixtures/exportDefaultAnonymousFunction/input/NoName";
+_generatedConstant.displayName = "fixtures/exportDefaultAnonymousFunction/input/NoName";
