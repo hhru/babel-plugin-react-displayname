@@ -145,45 +145,10 @@ const getCallExpressionFunctionParamIndex = (parentsList, callerPath, callExpres
     return callExpressionArguments.findIndex((item) => item === closestChildPath.node);
 }
 
-const isComponentCall = (jsxElementPath, parents, types) => {
-    let openingElementNode = jsxElementPath.node.openingElement.name;
-    while (types.isJSXMemberExpression(openingElementNode)) {
-        openingElementNode = openingElementNode.object
-    }
-
-    const elementName = openingElementNode.name;
-    if (elementName === 'Fragment' || elementName.charAt(0) === elementName.charAt(0).toLocaleLowerCase()) {
-        return false;
-    }
-
-    const firstFunctionParent = parents.findIndex(
-        (item) =>
-            item.isArrowFunctionExpression()
-            || item.isFunctionDeclaration()
-            || item.isFunctionExpression()
-    );
-
-    if (firstFunctionParent === -1) {
-        return true;
-    }
-
-    const firstDeclaratorParent = parents.findIndex(
-        (item) => item.isVariableDeclarator() || item.isAssignmentExpression()
-    );
-
-    return (firstDeclaratorParent !== -1 && firstDeclaratorParent < firstFunctionParent)
-}
-
 function transform({ types }) {
     const parseElement = (path, state) => {
         const parents = traverseParents(path);
-        if (
-            path.isJSXElement() &&
-            (
-                isComponentCall(path, parents, types)
-                || parents.some((item) => item !== path && (item.isJSXElement() || item.isJSXFragment()))
-            )
-        ) {
+        if (parents.some((item) => item !== path && (item.isJSXElement() || item.isJSXFragment()))) {
             return;
         }
 
@@ -205,7 +170,7 @@ function transform({ types }) {
                 if (types.isCallExpression(candidatePath.node.declaration)) {
                     const callExpressionArguments = candidatePath.node.declaration.arguments;
                     const paramIndex = getCallExpressionFunctionParamIndex(parents, candidatePath, callExpressionArguments);
-                    if (paramIndex === -1) {
+                    if (paramIndex === -1 || path.node === callExpressionArguments[paramIndex]) {
                         return;
                     }
                     const { id, variableDeclaratorNode, insertedPath } = cloneAsConstant(
@@ -257,6 +222,10 @@ function transform({ types }) {
             }
 
             if (candidatePath.isAssignmentExpression()) {
+                if (path.parentPath === candidatePath) {
+                    return;
+                }
+
                 displayNamePlacements.push({
                     id: candidatePath.node.left,
                     path: candidatePath.parentPath,
@@ -265,10 +234,14 @@ function transform({ types }) {
             }
 
             if (candidatePath.isVariableDeclarator()) {
+                if (path.parentPath === candidatePath) {
+                    return;
+                }
+
                 if (types.isCallExpression(candidatePath.node.init)) {
                     const callExpressionArguments = candidatePath.node.init.arguments;
                     const paramIndex = getCallExpressionFunctionParamIndex(parents, candidatePath, callExpressionArguments);
-                    if (paramIndex === -1) {
+                    if (paramIndex === -1 || path.node === callExpressionArguments[paramIndex]) {
                         return;
                     }
                     const { id, variableDeclaratorNode, insertedPath } = cloneAsConstant(
@@ -306,6 +279,10 @@ function transform({ types }) {
                 }
 
                 processedDeclarationNodes.push(objectNamePath.node);
+
+                if (path.parentPath === candidatePath) {
+                    return;
+                }
 
                 const nameNodes = [objectNamePath.node].concat(getObjectPropertyNameNodes(candidatePath, types).reverse());
 
