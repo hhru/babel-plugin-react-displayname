@@ -1,8 +1,0 @@
-.vscode
-.idea
-*.iml
-
-node_modules
-*.log
-lib
-test/fixtures/**/expected/*
