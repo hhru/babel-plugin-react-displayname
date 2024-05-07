@@ -3,5 +3,5 @@ module.exports = function(path) {
         return false;
     }
 
-    return path.node.body.body.some(({ type, key }) => type == 'ClassMethod' && key.name == 'render');
+    return path.node.body.body.some(({ type, key }) => type === 'ClassMethod' && key.name === 'render');
 };
