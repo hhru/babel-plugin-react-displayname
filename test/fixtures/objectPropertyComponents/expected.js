@@ -87,3 +87,16 @@ const FakeObjectProperty = ({
   return randomArray[0];
 };
 FakeObjectProperty.displayName = "fixtures/objectPropertyComponents/input/FakeObjectProperty";
+const FuncComponentWithOptionalProperty = ({
+  someCondition
+}) => {
+  const props = {
+    icon: someCondition ? /*#__PURE__*/_jsx("div", {
+      children: "icon"
+    }) : null
+  };
+  return /*#__PURE__*/_jsx(Button, {
+    ...props
+  });
+};
+FuncComponentWithOptionalProperty.displayName = "fixtures/objectPropertyComponents/input/FuncComponentWithOptionalProperty";
