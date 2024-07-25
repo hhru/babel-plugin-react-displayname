@@ -59,17 +59,25 @@ class ClassComponent1 extends React.Component {
 
 const ObjectPropertyComponentElement = {
     vasya: <Vasiliy />,
-    petya: <Petiliy>da</Petiliy>
-}
+    petya: <Petiliy>da</Petiliy>,
+};
 
 const FakeObjectProperty = ({ someCondition }) => {
     const randomArray = [];
 
     if (someCondition) {
         randomArray.push({
-            Component: <div>fake</div>
-        })
+            Component: <div>fake</div>,
+        });
     }
 
     return randomArray[0];
-}
+};
+
+const FuncComponentWithOptionalProperty = ({ someCondition }) => {
+    const props = {
+        icon: someCondition ? <div>icon</div> : null,
+    };
+
+    return <Button {...props} />;
+};
